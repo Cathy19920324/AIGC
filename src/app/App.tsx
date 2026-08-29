@@ -34,7 +34,7 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <DataProvider>
-      <BrowserRouter>
+      <BrowserRouter basename="/AIGC">
         <Routes>
           {/* 前台 */}
           <Route path="/" element={<FrontendLayout><Home /></FrontendLayout>} />
