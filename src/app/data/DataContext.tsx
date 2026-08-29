@@ -1,8 +1,28 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import {
   Tool, Competition, NewsItem,
   TOOLS_DATA, COMPS_DATA, NEWS_DATA,
 } from "./mock";
+
+const LS_KEYS = {
+  tools: "aigc_tools",
+  comps: "aigc_comps",
+  news: "aigc_news",
+};
+
+function load<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw) return JSON.parse(raw) as T;
+  } catch {}
+  return fallback;
+}
+
+function save<T>(key: string, val: T) {
+  try {
+    localStorage.setItem(key, JSON.stringify(val));
+  } catch {}
+}
 
 interface DataContextValue {
   tools: Tool[];
@@ -47,9 +67,31 @@ function reorder<T extends { id: number; order: number }>(
 }
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  const [tools, setTools] = useState<Tool[]>(TOOLS_DATA);
-  const [comps, setComps] = useState<Competition[]>(COMPS_DATA);
-  const [news, setNews] = useState<NewsItem[]>(NEWS_DATA);
+  const [tools, setTools] = useState<Tool[]>(() => load(LS_KEYS.tools, TOOLS_DATA));
+  const [comps, setComps] = useState<Competition[]>(() => load(LS_KEYS.comps, COMPS_DATA));
+  const [news, setNews] = useState<NewsItem[]>(() => load(LS_KEYS.news, NEWS_DATA));
+
+  // 持久化到 localStorage
+  useEffect(() => { save(LS_KEYS.tools, tools); }, [tools]);
+  useEffect(() => { save(LS_KEYS.comps, comps); }, [comps]);
+  useEffect(() => { save(LS_KEYS.news, news); }, [news]);
+
+  // 跨标签页同步：监听 storage 事件，后台修改 → 前台实时更新
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === LS_KEYS.tools && e.newValue) {
+        try { setTools(JSON.parse(e.newValue)); } catch {}
+      }
+      if (e.key === LS_KEYS.comps && e.newValue) {
+        try { setComps(JSON.parse(e.newValue)); } catch {}
+      }
+      if (e.key === LS_KEYS.news && e.newValue) {
+        try { setNews(JSON.parse(e.newValue)); } catch {}
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
 
   const incToolView = (id: number) =>
     setTools(s => s.map(t => t.id === id ? { ...t, views: t.views + 1 } : t));
