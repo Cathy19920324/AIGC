@@ -1,4 +1,4 @@
-import { useState, FormEvent } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowLeft, Settings, Plus, Edit2, Trash2, ChevronUp, ChevronDown, Eye,
@@ -222,6 +222,19 @@ export default function Admin() {
   const [tab, setTab] = useState<AdminTab>("tools");
   const [modal, setModal] = useState<ModalState>(null);
 
+  // 访问总次数：每次进入后台 +1，持久化到 localStorage
+  const [visitCount, setVisitCount] = useState<number>(0);
+  useEffect(() => {
+    try {
+      const n = parseInt(localStorage.getItem("aigc_admin_visits") || "0", 10) || 0;
+      const next = n + 1;
+      localStorage.setItem("aigc_admin_visits", String(next));
+      setVisitCount(next);
+    } catch {
+      setVisitCount(1);
+    }
+  }, []);
+
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
       <div className="flex items-center gap-3 mb-6">
@@ -232,6 +245,10 @@ export default function Admin() {
         <div className="flex items-center gap-2">
           <Settings className="w-4 h-4 text-[#1890ff]" />
           <h1 className="text-base font-bold text-gray-900">管理后台</h1>
+          <span className="text-xs text-gray-400 font-normal flex items-center gap-1">
+            <Eye className="w-3.5 h-3.5" />
+            访问总次数：<span className="text-[#1890ff] font-semibold">{visitCount}</span>
+          </span>
         </div>
       </div>
 
