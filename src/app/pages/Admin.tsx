@@ -241,14 +241,25 @@ export default function Admin() {
 
   // 访问总次数：每次进入后台 +1，持久化到 localStorage
   const [visitCount, setVisitCount] = useState<number>(0);
+  const [todayCount, setTodayCount] = useState<number>(0);
   useEffect(() => {
+    const today = new Date().toISOString().slice(0, 10);
     try {
+      // 总访问次数
       const n = parseInt(localStorage.getItem("aigc_admin_visits") || "0", 10) || 0;
       const next = n + 1;
       localStorage.setItem("aigc_admin_visits", String(next));
       setVisitCount(next);
+
+      // 今日访问数
+      const raw = localStorage.getItem("aigc_admin_visits_today");
+      const rec = raw ? JSON.parse(raw) : { date: "", count: 0 };
+      const todayNext = rec.date === today ? rec.count + 1 : 1;
+      localStorage.setItem("aigc_admin_visits_today", JSON.stringify({ date: today, count: todayNext }));
+      setTodayCount(todayNext);
     } catch {
       setVisitCount(1);
+      setTodayCount(1);
     }
   }, []);
 
@@ -265,6 +276,9 @@ export default function Admin() {
           <span className="text-xs text-gray-400 font-normal flex items-center gap-1">
             <Eye className="w-3.5 h-3.5" />
             访问总次数：<span className="text-[#1890ff] font-semibold">{visitCount}</span>
+          </span>
+          <span className="text-xs text-gray-400 font-normal flex items-center gap-1">
+            今日访问：<span className="text-[#52c41a] font-semibold">{todayCount}</span>
           </span>
         </div>
       </div>
