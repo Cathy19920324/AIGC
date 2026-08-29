@@ -3,6 +3,16 @@
 export type ToolTag = "付费" | "国内可用";
 export type ItemStatus = "进行中" | "已结束";
 
+// 根据开始/结束日期自动判断大赛状态
+export function getCompStatus(startDate: string, endDate: string): ItemStatus {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const end = endDate ? new Date(endDate).getTime() : NaN;
+  // 已填结束日期且今日已超过结束日期 → 已结束；否则为进行中
+  if (!isNaN(end) && today > end) return "已结束";
+  return "进行中";
+}
+
 export interface Tool {
   id: number;
   name: string;

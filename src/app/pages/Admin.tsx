@@ -4,10 +4,11 @@ import {
   ArrowLeft, Settings, Plus, Edit2, Trash2, GripVertical, Eye,
 } from "lucide-react";
 import { useData } from "../data/DataContext";
-import { Tool, Competition, NewsItem, BannerSlide, ToolTag, ItemStatus } from "../data/mock";
+import { Tool, Competition, NewsItem, BannerSlide, ToolTag, ItemStatus, getCompStatus } from "../data/mock";
 import { TagBadge, StatusBadge } from "../components/common/Badge";
 import { ModalWrap } from "../components/common/Modal";
 import { ImageInput } from "../components/common/ImageInput";
+import { RichTextEditor } from "../components/common/RichTextEditor";
 
 type AdminTab = "tools" | "comps" | "news" | "banners";
 type ModalState =
@@ -91,7 +92,8 @@ function CompModal({ item, onSave, onClose }: {
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (!form.name.trim() || !form.image) return;
-    onSave({ id: item?.id ?? Date.now(), views: item?.views ?? 0, order: item?.order ?? 999, ...form, logo: "" });
+    const status = getCompStatus(form.startDate, form.endDate);
+    onSave({ id: item?.id ?? Date.now(), views: item?.views ?? 0, order: item?.order ?? 999, ...form, logo: "", status });
   };
 
   return (
@@ -108,14 +110,6 @@ function CompModal({ item, onSave, onClose }: {
           <textarea rows={2} value={form.subtitle} onChange={e => f("subtitle", e.target.value)}
             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#1890ff] resize-none" placeholder="请输入大赛副标题" />
         </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">大赛状态<span className="text-red-500 ml-0.5">*</span></label>
-          <select value={form.status} onChange={e => f("status", e.target.value as ItemStatus)}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#1890ff] bg-white">
-            <option value="进行中">进行中</option>
-            <option value="已结束">已结束</option>
-          </select>
-        </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">开始日期</label>
@@ -129,10 +123,8 @@ function CompModal({ item, onSave, onClose }: {
           </div>
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">详情内容（支持 HTML）</label>
-          <textarea rows={5} value={form.detail} onChange={e => f("detail", e.target.value)}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#1890ff] resize-none font-mono"
-            placeholder="<h3>大赛简介</h3><p>详情描述...</p>" />
+          <label className="block text-xs font-medium text-gray-600 mb-1">详情内容（支持富文本：字体、图片、音频、视频）</label>
+          <RichTextEditor value={form.detail} onChange={v => f("detail", v)} />
         </div>
         <div className="flex gap-2 pt-1">
           <button type="submit" className="flex-1 bg-[#1890ff] text-white py-2 rounded-lg text-sm font-medium hover:bg-[#40a9ff] transition-colors">保存</button>
@@ -437,7 +429,7 @@ export default function Admin() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className="font-medium text-gray-900 text-sm truncate">{comp.name}</span>
-                    <StatusBadge status={comp.status} />
+                    <StatusBadge status={getCompStatus(comp.startDate, comp.endDate)} />
                   </div>
                   <p className="text-xs text-gray-400">{comp.startDate} ~ {comp.endDate}</p>
                 </div>

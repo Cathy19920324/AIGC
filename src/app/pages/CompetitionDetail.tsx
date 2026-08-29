@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Eye } from "lucide-react";
 import { useData } from "../data/DataContext";
+import { getCompStatus } from "../data/mock";
 import { DetailHeader } from "../components/common/DetailHeader";
 import { EmptyState } from "../components/common/EmptyState";
 
@@ -29,7 +30,7 @@ export default function CompetitionDetail() {
         image={comp.image}
         name={comp.name}
         subtitle={comp.subtitle}
-        status={comp.status}
+        status={getCompStatus(comp.startDate, comp.endDate)}
         dates={`${comp.startDate} ~ ${comp.endDate}`}
         onBack={() => navigate("/competitions")}
       />

@@ -1,7 +1,8 @@
-import { Competition } from "../../data/mock";
+import { Competition, getCompStatus } from "../../data/mock";
 import { StatusBadge } from "../common/Badge";
 
 export function CompCard({ comp, onClick }: { comp: Competition; onClick: () => void }) {
+  const status = getCompStatus(comp.startDate, comp.endDate);
   return (
     <div
       onClick={onClick}
@@ -15,7 +16,7 @@ export function CompCard({ comp, onClick }: { comp: Competition; onClick: () => 
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
         <div className="absolute top-2 left-2">
-          <StatusBadge status={comp.status} />
+          <StatusBadge status={status} />
         </div>
       </div>
       <div className="p-3">
