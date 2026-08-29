@@ -2,14 +2,14 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import { useData } from "../data/DataContext";
-import { BANNER_SLIDES } from "../data/mock";
 import { CompCard } from "../components/cards/CompCard";
 import { EmptyState } from "../components/common/EmptyState";
 import { GridSkeleton } from "../components/common/Skeleton";
 import { Carousel } from "../components/common/Carousel";
 
 export default function Competitions() {
-  const { comps, incCompView } = useData();
+  const { comps, banners, incCompView } = useData();
+  const sortedBanners = [...banners].sort((a, b) => a.order - b.order);
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -35,7 +35,7 @@ export default function Competitions() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
       <div className="mb-6">
-        <Carousel slides={BANNER_SLIDES} onCta={handleCta} />
+        <Carousel slides={sortedBanners} onCta={handleCta} />
       </div>
       <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
         <h1 className="text-xl font-bold text-gray-900">AI 大赛</h1>

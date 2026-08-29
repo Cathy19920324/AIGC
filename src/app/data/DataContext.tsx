@@ -1,13 +1,14 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import {
-  Tool, Competition, NewsItem,
-  TOOLS_DATA, COMPS_DATA, NEWS_DATA,
+  Tool, Competition, NewsItem, BannerSlide,
+  TOOLS_DATA, COMPS_DATA, NEWS_DATA, BANNER_SLIDES,
 } from "./mock";
 
 const LS_KEYS = {
   tools: "aigc_tools",
   comps: "aigc_comps",
   news: "aigc_news",
+  banners: "aigc_banners",
 };
 
 function load<T>(key: string, fallback: T): T {
@@ -45,6 +46,11 @@ interface DataContextValue {
   // 资讯 CRUD
   saveNews: (n: NewsItem) => void;
   deleteNews: (id: number) => void;
+  // Banner CRUD
+  banners: BannerSlide[];
+  saveBanner: (b: BannerSlide) => void;
+  deleteBanner: (id: number) => void;
+  moveBannerTo: (sourceId: number, targetId: number) => void;
 }
 
 const DataContext = createContext<DataContextValue | null>(null);
@@ -85,11 +91,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [tools, setTools] = useState<Tool[]>(() => load(LS_KEYS.tools, TOOLS_DATA));
   const [comps, setComps] = useState<Competition[]>(() => load(LS_KEYS.comps, COMPS_DATA));
   const [news, setNews] = useState<NewsItem[]>(() => load(LS_KEYS.news, NEWS_DATA));
+  const [banners, setBanners] = useState<BannerSlide[]>(() => load(LS_KEYS.banners, BANNER_SLIDES));
 
   // 持久化到 localStorage
   useEffect(() => { save(LS_KEYS.tools, tools); }, [tools]);
   useEffect(() => { save(LS_KEYS.comps, comps); }, [comps]);
   useEffect(() => { save(LS_KEYS.news, news); }, [news]);
+  useEffect(() => { save(LS_KEYS.banners, banners); }, [banners]);
 
   // 跨标签页同步：监听 storage 事件，后台修改 → 前台实时更新
   useEffect(() => {
@@ -102,6 +110,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       }
       if (e.key === LS_KEYS.news && e.newValue) {
         try { setNews(JSON.parse(e.newValue)); } catch {}
+      }
+      if (e.key === LS_KEYS.banners && e.newValue) {
+        try { setBanners(JSON.parse(e.newValue)); } catch {}
       }
     };
     window.addEventListener("storage", onStorage);
@@ -140,14 +151,23 @@ export function DataProvider({ children }: { children: ReactNode }) {
     });
   const deleteNews = (id: number) => setNews(s => s.filter(n => n.id !== id));
 
+  const saveBanner = (b: BannerSlide) =>
+    setBanners(s => {
+      const exists = s.some(x => x.id === b.id);
+      return exists ? s.map(x => x.id === b.id ? b : x) : [...s, { ...b, order: s.length + 1 }];
+    });
+  const deleteBanner = (id: number) => setBanners(s => s.filter(b => b.id !== id));
+  const moveBannerTo = (sourceId: number, targetId: number) => setBanners(s => moveTo(s, sourceId, targetId));
+
   return (
     <DataContext.Provider
       value={{
-        tools, comps, news,
+        tools, comps, news, banners,
         incToolView, incCompView, incNewsView,
         saveTool, deleteTool, moveTool, moveToolTo,
         saveComp, deleteComp, moveComp, moveCompTo,
         saveNews, deleteNews,
+        saveBanner, deleteBanner, moveBannerTo,
       }}
     >
       {children}

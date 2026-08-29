@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import { useData } from "../data/DataContext";
-import { BANNER_SLIDES } from "../data/mock";
 import { Carousel } from "../components/common/Carousel";
 import { SectionHeader } from "../components/common/SectionHeader";
 import { ToolCard } from "../components/cards/ToolCard";
@@ -8,7 +7,7 @@ import { CompCard } from "../components/cards/CompCard";
 import { NewsCard } from "../components/cards/NewsCard";
 
 export default function Home() {
-  const { tools, comps, news, incToolView, incCompView, incNewsView } = useData();
+  const { tools, comps, news, banners, incToolView, incCompView, incNewsView } = useData();
   const navigate = useNavigate();
 
   const hotTools = [...tools].sort((a, b) => a.order - b.order).slice(0, 10);
@@ -16,6 +15,7 @@ export default function Home() {
   const latestNews = [...news]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 10);
+  const sortedBanners = [...banners].sort((a, b) => a.order - b.order);
 
   const handleCta = (idx: number) => {
     navigate(idx === 0 ? "/tools" : idx === 1 ? "/competitions" : "/news");
@@ -23,7 +23,7 @@ export default function Home() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-10">
-      <Carousel slides={BANNER_SLIDES} onCta={handleCta} />
+      <Carousel slides={sortedBanners} onCta={handleCta} />
 
       <section>
         <SectionHeader

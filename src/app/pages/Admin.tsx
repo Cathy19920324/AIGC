@@ -4,16 +4,17 @@ import {
   ArrowLeft, Settings, Plus, Edit2, Trash2, GripVertical, Eye,
 } from "lucide-react";
 import { useData } from "../data/DataContext";
-import { Tool, Competition, NewsItem, ToolTag, ItemStatus } from "../data/mock";
+import { Tool, Competition, NewsItem, BannerSlide, ToolTag, ItemStatus } from "../data/mock";
 import { TagBadge, StatusBadge } from "../components/common/Badge";
 import { ModalWrap } from "../components/common/Modal";
 import { ImageInput } from "../components/common/ImageInput";
 
-type AdminTab = "tools" | "comps" | "news";
+type AdminTab = "tools" | "comps" | "news" | "banners";
 type ModalState =
   | { type: "tool"; item: Tool | null }
   | { type: "comp"; item: Competition | null }
   | { type: "news"; item: NewsItem | null }
+  | { type: "banner"; item: BannerSlide | null }
   | null;
 
 // ── 工具表单 ──────────────────────────────────────────────────────────────────
@@ -204,13 +205,74 @@ function NewsModal({ item, onSave, onClose }: {
   );
 }
 
+// ── Banner 表单 ────────────────────────────────────────────────────────────────
+function BannerModal({ item, onSave, onClose }: {
+  item: BannerSlide | null; onSave: (b: BannerSlide) => void; onClose: () => void;
+}) {
+  type F = Omit<BannerSlide, "id" | "order">;
+  const blank: F = { title: "", subtitle: "", cta: "", ctaIdx: 0, image: "" };
+  const [form, setForm] = useState<F>(
+    item ? { title: item.title, subtitle: item.subtitle, cta: item.cta, ctaIdx: item.ctaIdx, image: item.image } : blank
+  );
+  const f = (k: keyof F, v: unknown) => setForm(p => ({ ...p, [k]: v }));
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    if (!form.title.trim() || !form.image) return;
+    onSave({ id: item?.id ?? Date.now(), order: item?.order ?? 999, ...form });
+  };
+
+  const ctaOptions = [
+    { label: "浏览工具", idx: 0 },
+    { label: "查看大赛", idx: 1 },
+    { label: "阅读资讯", idx: 2 },
+  ];
+
+  return (
+    <ModalWrap title={item ? "编辑 Banner" : "添加 Banner"} onClose={onClose}>
+      <form onSubmit={submit} className="space-y-4">
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">标题<span className="text-red-500 ml-0.5">*</span></label>
+          <input required value={form.title} onChange={e => f("title", e.target.value)}
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#1890ff]" placeholder="请输入 Banner 标题" />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">副标题</label>
+          <input value={form.subtitle} onChange={e => f("subtitle", e.target.value)}
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#1890ff]" placeholder="请输入副标题" />
+        </div>
+        <ImageInput label="Banner 图片" value={form.image} onChange={v => f("image", v)} required />
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">按钮文字</label>
+            <input value={form.cta} onChange={e => f("cta", e.target.value)}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#1890ff]" placeholder="如：浏览工具" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">跳转目标</label>
+            <select value={form.ctaIdx} onChange={e => f("ctaIdx", Number(e.target.value))}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#1890ff] bg-white">
+              {ctaOptions.map(o => <option key={o.idx} value={o.idx}>{o.label}</option>)}
+            </select>
+          </div>
+        </div>
+        <div className="flex gap-2 pt-1">
+          <button type="submit" className="flex-1 bg-[#1890ff] text-white py-2 rounded-lg text-sm font-medium hover:bg-[#40a9ff] transition-colors">保存</button>
+          <button type="button" onClick={onClose} className="flex-1 border border-gray-200 text-gray-600 py-2 rounded-lg text-sm hover:bg-gray-50 transition-colors">取消</button>
+        </div>
+      </form>
+    </ModalWrap>
+  );
+}
+
 // ── 管理后台主页面 ────────────────────────────────────────────────────────────
 export default function Admin() {
   const {
-    tools, comps, news,
+    tools, comps, news, banners,
     saveTool, deleteTool, moveToolTo,
     saveComp, deleteComp, moveCompTo,
     saveNews, deleteNews,
+    saveBanner, deleteBanner, moveBannerTo,
   } = useData();
 
   const [tab, setTab] = useState<AdminTab>("tools");
@@ -233,6 +295,7 @@ export default function Admin() {
     if (dragId !== null && dragId !== targetId) {
       if (tab === "tools") moveToolTo(dragId, targetId);
       else if (tab === "comps") moveCompTo(dragId, targetId);
+      else if (tab === "banners") moveBannerTo(dragId, targetId);
     }
     setDragId(null);
     setOverId(null);
@@ -284,7 +347,7 @@ export default function Admin() {
       </div>
 
       <div className="flex gap-1 mb-6 bg-white rounded-xl p-1 border border-gray-100 w-fit overflow-x-auto">
-        {([["tools", "AI工具管理"], ["comps", "AI大赛管理"], ["news", "AI资讯管理"]] as const).map(([t, label]) => (
+        {([["tools", "AI工具管理"], ["comps", "AI大赛管理"], ["news", "AI资讯管理"], ["banners", "首页Banner管理"]] as const).map(([t, label]) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -425,6 +488,48 @@ export default function Admin() {
         </div>
       )}
 
+      {/* Banner 管理 */}
+      {tab === "banners" && (
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+            <span className="font-semibold text-gray-900 text-sm">Banner 列表（共 {banners.length} 项，可拖拽排序）</span>
+            <button onClick={() => setModal({ type: "banner", item: null })}
+              className="flex items-center gap-1.5 bg-[#1890ff] text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-[#40a9ff] transition-colors">
+              <Plus className="w-3.5 h-3.5" /> 添加 Banner
+            </button>
+          </div>
+          <div className="divide-y divide-gray-50">
+            {[...banners].sort((a, b) => a.order - b.order).map(b => (
+              <div
+                key={b.id}
+                draggable
+                onDragStart={onDragStart(b.id)}
+                onDragOver={onDragOver(b.id)}
+                onDrop={onDrop(b.id)}
+                onDragEnd={onDragEnd}
+                className={`flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition-colors cursor-move relative ${
+                  dragId === b.id ? "opacity-40" : ""
+                } ${overId === b.id && dragId !== b.id ? "bg-blue-50" : ""}`}
+              >
+                {overId === b.id && dragId !== b.id && (
+                  <div className="absolute left-0 right-0 top-0 h-0.5 bg-[#1890ff]" />
+                )}
+                <GripVertical className="w-4 h-4 text-gray-300 flex-shrink-0" />
+                <img src={b.image} alt={b.title} className="w-28 h-12 rounded-md object-cover border border-gray-100 bg-gray-50 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-gray-900 text-sm truncate">{b.title}</div>
+                  <p className="text-xs text-gray-400 truncate">{b.subtitle}</p>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => setModal({ type: "banner", item: b })} className="p-1.5 text-[#1890ff] hover:bg-blue-50 rounded-lg transition-colors"><Edit2 className="w-3.5 h-3.5" /></button>
+                  <button onClick={() => { if (confirm(`确认删除 Banner「${b.title}」？`)) deleteBanner(b.id); }} className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {modal?.type === "tool" && (
         <ToolModal
           item={modal.item as Tool | null}
@@ -443,6 +548,13 @@ export default function Admin() {
         <NewsModal
           item={modal.item as NewsItem | null}
           onSave={n => { saveNews(n); setModal(null); }}
+          onClose={() => setModal(null)}
+        />
+      )}
+      {modal?.type === "banner" && (
+        <BannerModal
+          item={modal.item as BannerSlide | null}
+          onSave={b => { saveBanner(b); setModal(null); }}
           onClose={() => setModal(null)}
         />
       )}
