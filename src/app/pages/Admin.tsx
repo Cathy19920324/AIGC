@@ -1,7 +1,7 @@
 import { useState, useEffect, FormEvent } from "react";
 import { Link } from "react-router-dom";
 import {
-  ArrowLeft, Settings, Plus, Edit2, Trash2, ChevronUp, ChevronDown, Eye,
+  ArrowLeft, Settings, Plus, Edit2, Trash2, GripVertical, Eye,
 } from "lucide-react";
 import { useData } from "../data/DataContext";
 import { Tool, Competition, NewsItem, ToolTag, ItemStatus } from "../data/mock";
@@ -83,14 +83,14 @@ function CompModal({ item, onSave, onClose }: {
   type F = Omit<Competition, "id" | "views" | "order">;
   const blank: F = { name: "", image: "", logo: "", subtitle: "", status: "进行中", startDate: "", endDate: "", detail: "" };
   const [form, setForm] = useState<F>(
-    item ? { name: item.name, image: item.image, logo: item.logo, subtitle: item.subtitle, status: item.status, startDate: item.startDate, endDate: item.endDate, detail: item.detail } : blank
+    item ? { name: item.name, image: item.image, logo: "", subtitle: item.subtitle, status: item.status, startDate: item.startDate, endDate: item.endDate, detail: item.detail } : blank
   );
   const f = (k: keyof F, v: unknown) => setForm(p => ({ ...p, [k]: v }));
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.image || !form.logo) return;
-    onSave({ id: item?.id ?? Date.now(), views: item?.views ?? 0, order: item?.order ?? 999, ...form });
+    if (!form.name.trim() || !form.image) return;
+    onSave({ id: item?.id ?? Date.now(), views: item?.views ?? 0, order: item?.order ?? 999, ...form, logo: "" });
   };
 
   return (
@@ -102,7 +102,6 @@ function CompModal({ item, onSave, onClose }: {
             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#1890ff]" placeholder="请输入大赛名称" />
         </div>
         <ImageInput label="大赛图片" value={form.image} onChange={v => f("image", v)} required />
-        <ImageInput label="大赛 Logo" value={form.logo} onChange={v => f("logo", v)} required />
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">大赛副标题</label>
           <textarea rows={2} value={form.subtitle} onChange={e => f("subtitle", e.target.value)}
@@ -209,13 +208,36 @@ function NewsModal({ item, onSave, onClose }: {
 export default function Admin() {
   const {
     tools, comps, news,
-    saveTool, deleteTool, moveTool,
-    saveComp, deleteComp, moveComp,
+    saveTool, deleteTool, moveToolTo,
+    saveComp, deleteComp, moveCompTo,
     saveNews, deleteNews,
   } = useData();
 
   const [tab, setTab] = useState<AdminTab>("tools");
   const [modal, setModal] = useState<ModalState>(null);
+
+  // 拖拽排序
+  const [dragId, setDragId] = useState<number | null>(null);
+  const [overId, setOverId] = useState<number | null>(null);
+  const onDragStart = (id: number) => (e: React.DragEvent) => {
+    setDragId(id);
+    e.dataTransfer.effectAllowed = "move";
+  };
+  const onDragOver = (id: number) => (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (overId !== id) setOverId(id);
+  };
+  const onDrop = (targetId: number) => (e: React.DragEvent) => {
+    e.preventDefault();
+    if (dragId !== null && dragId !== targetId) {
+      if (tab === "tools") moveToolTo(dragId, targetId);
+      else if (tab === "comps") moveCompTo(dragId, targetId);
+    }
+    setDragId(null);
+    setOverId(null);
+  };
+  const onDragEnd = () => { setDragId(null); setOverId(null); };
 
   // 访问总次数：每次进入后台 +1，持久化到 localStorage
   const [visitCount, setVisitCount] = useState<number>(0);
@@ -271,7 +293,21 @@ export default function Admin() {
           </div>
           <div className="divide-y divide-gray-50">
             {[...tools].sort((a, b) => a.order - b.order).map(tool => (
-              <div key={tool.id} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition-colors">
+              <div
+                key={tool.id}
+                draggable
+                onDragStart={onDragStart(tool.id)}
+                onDragOver={onDragOver(tool.id)}
+                onDrop={onDrop(tool.id)}
+                onDragEnd={onDragEnd}
+                className={`flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition-colors cursor-move relative ${
+                  dragId === tool.id ? "opacity-40" : ""
+                } ${overId === tool.id && dragId !== tool.id ? "bg-blue-50" : ""}`}
+              >
+                {overId === tool.id && dragId !== tool.id && (
+                  <div className="absolute left-0 right-0 top-0 h-0.5 bg-[#1890ff]" />
+                )}
+                <GripVertical className="w-4 h-4 text-gray-300 flex-shrink-0" />
                 <img src={tool.logo} alt={tool.name} className="w-9 h-9 rounded-lg object-cover border border-gray-100 bg-gray-50 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
@@ -285,8 +321,6 @@ export default function Admin() {
                   {tool.views.toLocaleString()}
                 </div>
                 <div className="flex items-center gap-1">
-                  <button onClick={() => moveTool(tool.id, -1)} className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"><ChevronUp className="w-3.5 h-3.5" /></button>
-                  <button onClick={() => moveTool(tool.id, 1)} className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"><ChevronDown className="w-3.5 h-3.5" /></button>
                   <button onClick={() => setModal({ type: "tool", item: tool })} className="p-1.5 text-[#1890ff] hover:bg-blue-50 rounded-lg transition-colors"><Edit2 className="w-3.5 h-3.5" /></button>
                   <button onClick={() => { if (confirm(`确认删除「${tool.name}」？`)) deleteTool(tool.id); }} className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
                 </div>
@@ -308,8 +342,21 @@ export default function Admin() {
           </div>
           <div className="divide-y divide-gray-50">
             {[...comps].sort((a, b) => a.order - b.order).map(comp => (
-              <div key={comp.id} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition-colors">
-                <img src={comp.logo} alt={comp.name} className="w-9 h-9 rounded-lg object-cover border border-gray-100 bg-gray-50 flex-shrink-0" />
+              <div
+                key={comp.id}
+                draggable
+                onDragStart={onDragStart(comp.id)}
+                onDragOver={onDragOver(comp.id)}
+                onDrop={onDrop(comp.id)}
+                onDragEnd={onDragEnd}
+                className={`flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition-colors cursor-move relative ${
+                  dragId === comp.id ? "opacity-40" : ""
+                } ${overId === comp.id && dragId !== comp.id ? "bg-blue-50" : ""}`}
+              >
+                {overId === comp.id && dragId !== comp.id && (
+                  <div className="absolute left-0 right-0 top-0 h-0.5 bg-[#1890ff]" />
+                )}
+                <GripVertical className="w-4 h-4 text-gray-300 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className="font-medium text-gray-900 text-sm truncate">{comp.name}</span>
@@ -322,8 +369,6 @@ export default function Admin() {
                   {comp.views.toLocaleString()}
                 </div>
                 <div className="flex items-center gap-1">
-                  <button onClick={() => moveComp(comp.id, -1)} className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"><ChevronUp className="w-3.5 h-3.5" /></button>
-                  <button onClick={() => moveComp(comp.id, 1)} className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"><ChevronDown className="w-3.5 h-3.5" /></button>
                   <button onClick={() => setModal({ type: "comp", item: comp })} className="p-1.5 text-[#1890ff] hover:bg-blue-50 rounded-lg transition-colors"><Edit2 className="w-3.5 h-3.5" /></button>
                   <button onClick={() => { if (confirm(`确认删除「${comp.name}」？`)) deleteComp(comp.id); }} className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
                 </div>

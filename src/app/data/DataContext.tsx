@@ -36,10 +36,12 @@ interface DataContextValue {
   saveTool: (t: Tool) => void;
   deleteTool: (id: number) => void;
   moveTool: (id: number, dir: -1 | 1) => void;
+  moveToolTo: (sourceId: number, targetId: number) => void;
   // 大赛 CRUD
   saveComp: (c: Competition) => void;
   deleteComp: (id: number) => void;
   moveComp: (id: number, dir: -1 | 1) => void;
+  moveCompTo: (sourceId: number, targetId: number) => void;
   // 资讯 CRUD
   saveNews: (n: NewsItem) => void;
   deleteNews: (id: number) => void;
@@ -64,6 +66,19 @@ function reorder<T extends { id: number; order: number }>(
   sorted[idx] = { ...sorted[idx], order: sorted[target].order };
   sorted[target] = { ...sorted[target], order: tmp };
   return sorted;
+}
+
+function moveTo<T extends { id: number; order: number }>(
+  list: T[], sourceId: number, targetId: number
+): T[] {
+  if (sourceId === targetId) return list;
+  const sorted = [...list].sort((a, b) => a.order - b.order);
+  const srcIdx = sorted.findIndex(x => x.id === sourceId);
+  const tgtIdx = sorted.findIndex(x => x.id === targetId);
+  if (srcIdx < 0 || tgtIdx < 0) return list;
+  const [moved] = sorted.splice(srcIdx, 1);
+  sorted.splice(tgtIdx, 0, moved);
+  return sorted.map((item, i) => ({ ...item, order: i + 1 }));
 }
 
 export function DataProvider({ children }: { children: ReactNode }) {
@@ -107,6 +122,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     });
   const deleteTool = (id: number) => setTools(s => s.filter(t => t.id !== id));
   const moveTool = (id: number, dir: -1 | 1) => setTools(s => reorder(s, id, dir));
+  const moveToolTo = (sourceId: number, targetId: number) => setTools(s => moveTo(s, sourceId, targetId));
 
   const saveComp = (c: Competition) =>
     setComps(s => {
@@ -115,6 +131,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     });
   const deleteComp = (id: number) => setComps(s => s.filter(c => c.id !== id));
   const moveComp = (id: number, dir: -1 | 1) => setComps(s => reorder(s, id, dir));
+  const moveCompTo = (sourceId: number, targetId: number) => setComps(s => moveTo(s, sourceId, targetId));
 
   const saveNews = (n: NewsItem) =>
     setNews(s => {
@@ -128,8 +145,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       value={{
         tools, comps, news,
         incToolView, incCompView, incNewsView,
-        saveTool, deleteTool, moveTool,
-        saveComp, deleteComp, moveComp,
+        saveTool, deleteTool, moveTool, moveToolTo,
+        saveComp, deleteComp, moveComp, moveCompTo,
         saveNews, deleteNews,
       }}
     >

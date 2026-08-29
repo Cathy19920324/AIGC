@@ -31,7 +31,7 @@ export function Carousel({
         style={{ transform: `translateX(-${cur * 100}%)` }}
       >
         {slides.map((s, i) => (
-          <div key={i} className="min-w-full relative h-48 sm:h-64 md:h-80 lg:h-96">
+          <div key={i} className="min-w-full relative aspect-[21/9]">
             <img src={s.image} alt={s.title} className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex flex-col justify-center px-6 sm:px-12">
               <h2 className="text-white text-xl sm:text-3xl font-bold mb-2 max-w-xl">{s.title}</h2>

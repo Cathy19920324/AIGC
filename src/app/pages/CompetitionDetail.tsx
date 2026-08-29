@@ -27,7 +27,6 @@ export default function CompetitionDetail() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
       <DetailHeader
         image={comp.image}
-        logo={comp.logo}
         name={comp.name}
         subtitle={comp.subtitle}
         status={comp.status}
