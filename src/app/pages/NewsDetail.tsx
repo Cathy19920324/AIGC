@@ -27,11 +27,9 @@ export default function NewsDetail() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
       <DetailHeader
         image={item.image}
-        logo={item.logo}
         name={item.name}
         subtitle={item.subtitle}
         status={item.status}
-        author={item.author}
         date={item.date}
         onBack={() => navigate("/news")}
       />

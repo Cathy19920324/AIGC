@@ -5,7 +5,7 @@ import { TagBadge, StatusBadge } from "./Badge";
 export function DetailHeader({
   image, logo, name, subtitle, tags, status, dates, author, date, onBack,
 }: {
-  image: string; logo: string; name: string; subtitle?: string;
+  image: string; logo?: string; name: string; subtitle?: string;
   tags?: ToolTag[]; status?: ItemStatus;
   dates?: string; author?: string; date?: string; onBack: () => void;
 }) {
@@ -23,7 +23,7 @@ export function DetailHeader({
         </div>
         <div className="p-5 sm:p-7">
           <div className="flex items-start gap-4">
-            <img src={logo} alt={name} className="w-14 h-14 rounded-xl object-cover border border-gray-100 bg-gray-50 flex-shrink-0" />
+            {logo && <img src={logo} alt={name} className="w-14 h-14 rounded-xl object-cover border border-gray-100 bg-gray-50 flex-shrink-0" />}
             <div className="flex-1 min-w-0">
               <h1 className="text-xl font-bold text-gray-900 mb-1">{name}</h1>
               {subtitle && <p className="text-gray-500 text-sm leading-relaxed mb-3">{subtitle}</p>}

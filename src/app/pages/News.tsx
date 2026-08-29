@@ -23,8 +23,7 @@ export default function News() {
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .filter(n =>
       n.name.includes(search) ||
-      n.subtitle.includes(search) ||
-      n.author.includes(search)
+      n.subtitle.includes(search)
     );
 
   const handleClick = (id: number) => {

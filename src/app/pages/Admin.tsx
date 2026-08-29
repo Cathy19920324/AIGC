@@ -150,14 +150,14 @@ function NewsModal({ item, onSave, onClose }: {
   type F = Omit<NewsItem, "id" | "views">;
   const blank: F = { name: "", image: "", logo: "", author: "", subtitle: "", status: "进行中", date: "", detail: "" };
   const [form, setForm] = useState<F>(
-    item ? { name: item.name, image: item.image, logo: item.logo, author: item.author, subtitle: item.subtitle, status: item.status, date: item.date, detail: item.detail } : blank
+    item ? { name: item.name, image: item.image, logo: "", author: "", subtitle: item.subtitle, status: item.status, date: item.date, detail: item.detail } : blank
   );
   const f = (k: keyof F, v: unknown) => setForm(p => ({ ...p, [k]: v }));
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.image || !form.logo) return;
-    onSave({ id: item?.id ?? Date.now(), views: item?.views ?? 0, ...form });
+    if (!form.name.trim() || !form.image) return;
+    onSave({ id: item?.id ?? Date.now(), views: item?.views ?? 0, ...form, logo: "", author: "" });
   };
 
   return (
@@ -169,18 +169,13 @@ function NewsModal({ item, onSave, onClose }: {
             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#1890ff]" placeholder="请输入资讯标题" />
         </div>
         <ImageInput label="资讯图片" value={form.image} onChange={v => f("image", v)} required />
-        <ImageInput label="资讯 Logo" value={form.logo} onChange={v => f("logo", v)} required />
         <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">作者名称</label>
-            <input value={form.author} onChange={e => f("author", e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#1890ff]" placeholder="作者" />
-          </div>
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">发布日期</label>
             <input type="date" value={form.date} onChange={e => f("date", e.target.value)}
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#1890ff]" />
           </div>
+          <div />
         </div>
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">资讯副标题</label>
@@ -351,12 +346,11 @@ export default function Admin() {
           <div className="divide-y divide-gray-50">
             {[...news].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(n => (
               <div key={n.id} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition-colors">
-                <img src={n.logo} alt={n.name} className="w-9 h-9 rounded-lg object-cover border border-gray-100 bg-gray-50 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className="font-medium text-gray-900 text-sm truncate">{n.name}</span>
                   </div>
-                  <p className="text-xs text-gray-400">{n.author} · {n.date}</p>
+                  <p className="text-xs text-gray-400">{n.date}</p>
                 </div>
                 <div className="flex items-center gap-1 text-xs text-gray-400 mr-3 hidden sm:flex">
                   <Eye className="w-3.5 h-3.5" />

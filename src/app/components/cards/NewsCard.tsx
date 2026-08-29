@@ -19,9 +19,6 @@ export function NewsCard({ news, onClick }: { news: NewsItem; onClick: () => voi
           {news.name}
         </h3>
         <div className="flex items-center gap-1.5">
-          <img src={news.logo} alt={news.author} className="w-4 h-4 rounded-full object-cover bg-gray-100" />
-          <span className="text-[11px] text-gray-400 truncate">{news.author}</span>
-          <span className="text-[11px] text-gray-300 flex-shrink-0">·</span>
           <span className="text-[11px] text-gray-400 flex-shrink-0">{news.date}</span>
         </div>
       </div>
