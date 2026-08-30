@@ -1,13 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { BannerSlide } from "../../data/mock";
 
-export function Carousel({
-  slides, onCta,
-}: {
-  slides: BannerSlide[];
-  onCta: (idx: number) => void;
-}) {
+export function Carousel({ slides }: { slides: BannerSlide[] }) {
+  const navigate = useNavigate();
   const [cur, setCur] = useState(0);
   const [paused, setPaused] = useState(false);
 
@@ -20,6 +17,15 @@ export function Carousel({
     return () => clearInterval(t);
   }, [paused, next]);
 
+  const go = (link: string) => {
+    if (!link) return;
+    if (/^https?:\/\//i.test(link)) {
+      window.open(link, "_blank", "noopener,noreferrer");
+    } else {
+      navigate(link);
+    }
+  };
+
   return (
     <div
       className="relative rounded-2xl overflow-hidden group"
@@ -31,13 +37,17 @@ export function Carousel({
         style={{ transform: `translateX(-${cur * 100}%)` }}
       >
         {slides.map((s, i) => (
-          <div key={i} className="min-w-full relative aspect-[21/9]">
+          <div
+            key={i}
+            className="min-w-full relative aspect-[21/9] cursor-pointer"
+            onClick={() => go(s.link)}
+          >
             <img src={s.image} alt={s.title} className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex flex-col justify-center px-6 sm:px-12">
               <h2 className="text-white text-xl sm:text-3xl font-bold mb-2 max-w-xl">{s.title}</h2>
               <p className="text-white/80 text-sm sm:text-base mb-4 max-w-lg">{s.subtitle}</p>
               <button
-                onClick={() => onCta(s.ctaIdx)}
+                onClick={(e) => { e.stopPropagation(); go(s.link); }}
                 className="self-start bg-[#1890ff] hover:bg-[#40a9ff] text-white px-5 py-2 rounded-full text-sm font-medium transition-colors"
               >
                 {s.cta}

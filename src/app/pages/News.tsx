@@ -31,14 +31,10 @@ export default function News() {
     navigate(`/news/${id}`);
   };
 
-  const handleCta = (idx: number) => {
-    navigate(idx === 0 ? "/tools" : idx === 1 ? "/competitions" : "/news");
-  };
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
       <div className="mb-6">
-        <Carousel slides={sortedBanners} onCta={handleCta} />
+        <Carousel slides={sortedBanners} />
       </div>
       <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
         <h1 className="text-xl font-bold text-gray-900">AI 资讯</h1>

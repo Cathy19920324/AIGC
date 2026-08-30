@@ -186,9 +186,9 @@ function BannerModal({ item, onSave, onClose }: {
   item: BannerSlide | null; onSave: (b: BannerSlide) => void; onClose: () => void;
 }) {
   type F = Omit<BannerSlide, "id" | "order">;
-  const blank: F = { title: "", subtitle: "", cta: "", ctaIdx: 0, image: "" };
+  const blank: F = { title: "", subtitle: "", cta: "", link: "", image: "" };
   const [form, setForm] = useState<F>(
-    item ? { title: item.title, subtitle: item.subtitle, cta: item.cta, ctaIdx: item.ctaIdx, image: item.image } : blank
+    item ? { title: item.title, subtitle: item.subtitle, cta: item.cta, link: item.link, image: item.image } : blank
   );
   const f = (k: keyof F, v: unknown) => setForm(p => ({ ...p, [k]: v }));
 
@@ -197,12 +197,6 @@ function BannerModal({ item, onSave, onClose }: {
     if (!form.title.trim() || !form.image) return;
     onSave({ id: item?.id ?? Date.now(), order: item?.order ?? 999, ...form });
   };
-
-  const ctaOptions = [
-    { label: "浏览工具", idx: 0 },
-    { label: "查看大赛", idx: 1 },
-    { label: "阅读资讯", idx: 2 },
-  ];
 
   return (
     <ModalWrap title={item ? "编辑 Banner" : "添加 Banner"} onClose={onClose}>
@@ -226,10 +220,9 @@ function BannerModal({ item, onSave, onClose }: {
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">跳转目标</label>
-            <select value={form.ctaIdx} onChange={e => f("ctaIdx", Number(e.target.value))}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#1890ff] bg-white">
-              {ctaOptions.map(o => <option key={o.idx} value={o.idx}>{o.label}</option>)}
-            </select>
+            <input value={form.link} onChange={e => f("link", e.target.value)}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#1890ff]"
+              placeholder="内部路径如 /tools，外部链接如 https://..." />
           </div>
         </div>
         <div className="flex gap-2 pt-1">

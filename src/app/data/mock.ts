@@ -57,7 +57,7 @@ export interface BannerSlide {
   title: string;
   subtitle: string;
   cta: string;
-  ctaIdx: number;
+  link: string;
   image: string;
   order: number;
 }
@@ -282,7 +282,7 @@ export const BANNER_SLIDES: BannerSlide[] = [
     title: "探索 AIGC 的无限可能",
     subtitle: "聚合全球优质 AI 工具、大赛与资讯，一站式获取",
     cta: "浏览工具",
-    ctaIdx: 0,
+    link: "/tools",
     image: img("banner1", 1200, 400),
     order: 1,
   },
@@ -291,7 +291,7 @@ export const BANNER_SLIDES: BannerSlide[] = [
     title: "参与 AI 大赛，赢取丰厚奖金",
     subtitle: "汇聚全球顶级 AI 赛事，展现你的技术实力",
     cta: "查看大赛",
-    ctaIdx: 1,
+    link: "/competitions",
     image: img("banner2", 1200, 400),
     order: 2,
   },
@@ -300,7 +300,7 @@ export const BANNER_SLIDES: BannerSlide[] = [
     title: "掌握 AIGC 行业最新动态",
     subtitle: "第一时间获取 AI 领域资讯，洞察行业趋势",
     cta: "阅读资讯",
-    ctaIdx: 2,
+    link: "/news",
     image: img("banner3", 1200, 400),
     order: 3,
   },

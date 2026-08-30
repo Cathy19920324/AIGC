@@ -17,13 +17,9 @@ export default function Home() {
     .slice(0, 10);
   const sortedBanners = [...banners].sort((a, b) => a.order - b.order);
 
-  const handleCta = (idx: number) => {
-    navigate(idx === 0 ? "/tools" : idx === 1 ? "/competitions" : "/news");
-  };
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-10">
-      <Carousel slides={sortedBanners} onCta={handleCta} />
+      <Carousel slides={sortedBanners} />
 
       <section>
         <SectionHeader
