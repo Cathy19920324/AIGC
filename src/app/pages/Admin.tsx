@@ -4,7 +4,7 @@ import {
   ArrowLeft, Settings, Plus, Edit2, Trash2, GripVertical, Eye,
 } from "lucide-react";
 import { useData } from "../data/DataContext";
-import { Tool, Competition, NewsItem, BannerSlide, ToolTag, ItemStatus, getCompStatus } from "../data/mock";
+import { Tool, Competition, NewsItem, BannerSlide, ToolTag, getCompStatus } from "../data/mock";
 import { TagBadge, StatusBadge } from "../components/common/Badge";
 import { ModalWrap } from "../components/common/Modal";
 import { ImageInput } from "../components/common/ImageInput";
@@ -149,7 +149,9 @@ function NewsModal({ item, onSave, onClose }: {
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (!form.name.trim() || !form.image) return;
-    onSave({ id: item?.id ?? Date.now(), views: item?.views ?? 0, ...form, logo: "", author: "" });
+    // 发布日期默认当天（编辑时保留原日期）
+    const date = form.date || new Date().toISOString().slice(0, 10);
+    onSave({ id: item?.id ?? Date.now(), views: item?.views ?? 0, ...form, date, logo: "", author: "" });
   };
 
   return (
@@ -161,32 +163,14 @@ function NewsModal({ item, onSave, onClose }: {
             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#1890ff]" placeholder="请输入资讯标题" />
         </div>
         <ImageInput label="资讯图片" value={form.image} onChange={v => f("image", v)} required />
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">发布日期</label>
-            <input type="date" value={form.date} onChange={e => f("date", e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#1890ff]" />
-          </div>
-          <div />
-        </div>
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">资讯副标题</label>
           <textarea rows={2} value={form.subtitle} onChange={e => f("subtitle", e.target.value)}
             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#1890ff] resize-none" placeholder="请输入资讯副标题" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">标签</label>
-          <select value={form.status} onChange={e => f("status", e.target.value as ItemStatus)}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#1890ff] bg-white">
-            <option value="进行中">进行中</option>
-            <option value="已结束">已结束</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">详情内容（支持 HTML）</label>
-          <textarea rows={5} value={form.detail} onChange={e => f("detail", e.target.value)}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#1890ff] resize-none font-mono"
-            placeholder="<h3>资讯正文</h3><p>详情内容...</p>" />
+          <label className="block text-xs font-medium text-gray-600 mb-1">详情内容（支持富文本：字体、图片、音频、视频）</label>
+          <RichTextEditor value={form.detail} onChange={v => f("detail", v)} />
         </div>
         <div className="flex gap-2 pt-1">
           <button type="submit" className="flex-1 bg-[#1890ff] text-white py-2 rounded-lg text-sm font-medium hover:bg-[#40a9ff] transition-colors">保存</button>
